@@ -85,7 +85,6 @@ $RECYCLE.BIN/
 # Jupyter Notebook
 # ========================
 .ipynb_checkpoints
-*.ipynb
 
 # ========================
 # Logs & Output
