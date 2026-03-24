@@ -1,0 +1,13 @@
+{
+  "thread_id": "35c06e21-26d1-4d77-8c4f-8c291d6ea8ed",
+  "messages": [
+    {
+      "role": "user",
+      "content": "안녕"
+    },
+    {
+      "role": "assistant",
+      "content": "안녕하세요! 무엇을 도와드릴까요?"
+    }
+  ]
+}
