@@ -13,15 +13,6 @@ from openai_service import (
 # .env 파일 로드
 load_dotenv()
 
-# 추천 검색어 버튼 정의
-SUGGESTIONS = {
-    "🗼 도쿄 3박 4일": "도쿄 3박 4일 여행 일정을 짜주세요.",
-    "🏝️ 발리 5박 6일": "발리 5박 6일 여행 일정을 짜주세요.",
-    "🗽 뉴욕 4박 5일": "뉴욕 4박 5일 여행 일정을 짜주세요.",
-    "🏯 교토 2박 3일": "교토 2박 3일 여행 일정을 짜주세요.",
-    "🌏 서울 1박 2일": "서울 1박 2일 여행 일정을 짜주세요.",
-}
-
 # 브라우저 탭에 표시되는 웹 페이지 제목(title)을 설정함
 st.set_page_config(page_title="Trip Maker", page_icon="🌴")
 
@@ -51,6 +42,7 @@ with st.sidebar:
 # Agent 설정
 # -----------------------------------------
 agent = create_agent_executor()
+agent_mini = create_agent_executor("gpt-4.1-mini")
 
 # ---------------------------------
 # 채팅 UI 출력
@@ -61,15 +53,6 @@ for msg in st.session_state["messages"]:
     with st.chat_message(msg["role"]):  # 메시지의 역할(role:"user" 또는 "assistant")
         st.markdown(msg["content"])     # 해당 메시지의 실제 내용(content)을 마크다운 형식으로 출력
 
-# with st.container():
-#     st.chat_input("Ask a question...", key="initial_question")
-
-#     selected_suggestion = st.pills(
-#         label="Examples",
-#         label_visibility="collapsed",
-#         options=SUGGESTIONS.keys(),
-#         key="selected_suggestion",
-#     )
 
 # -----------------------------
 # 사용자 입력
