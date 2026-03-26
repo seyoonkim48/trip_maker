@@ -55,7 +55,7 @@ with st.sidebar:
         width="stretch",
         default="여행 옵션"
     )
-    print(selection)
+    
     st.markdown("### ✈️ 여행 옵션")
     st.write("트립 메이커가 참고할 수 있게 여행에 대한 세부 설정을 선택해주세요.")
     
