@@ -20,9 +20,17 @@ from map import make_map
 load_dotenv()
 
 # 브라우저 탭에 표시되는 웹 페이지 제목(title)을 설정함
-st.set_page_config(page_title="Trip Maker", page_icon="🌴",)
+st.set_page_config(page_title="Trip Maker", page_icon="🌴", layout="wide")
 
 MAP_HEIGHT = 500
+
+SUGGESTIONS = {
+    "🗼 도쿄 3박 4일": "도쿄 3박 4일 여행 일정을 짜주세요.",
+    "🏝️ 발리 5박 6일": "발리 5박 6일 여행 일정을 짜주세요.",
+    "🗽 뉴욕 4박 5일": "뉴욕 4박 5일 여행 일정을 짜주세요.",
+    "🏯 교토 2박 3일": "교토 2박 3일 여행 일정을 짜주세요.",
+    "🌏 서울 1박 2일": "서울 1박 2일 여행 일정을 짜주세요.",
+}
 
 # -----------------------
 # 초기화
@@ -34,10 +42,20 @@ if "messages" not in st.session_state or "thread_id" not in st.session_state:
     st.session_state["summaries"] = None
     st.session_state["selected_trip"] = None
 
+st.title("여행을 쉽게, Trip Maker 🌴")
 #----------------------------------
 # 사이드바
 #----------------------------------
+side_option = ["여행 옵션", "저장된 일정"]
 with st.sidebar:
+    selection = st.segmented_control(
+        "side_option",
+        side_option,
+        selection_mode="single",
+        width="stretch",
+        default="여행 옵션"
+    )
+    print(selection)
     st.markdown("### ✈️ 여행 옵션")
     st.write("트립 메이커가 참고할 수 있게 여행에 대한 세부 설정을 선택해주세요.")
     
@@ -97,10 +115,22 @@ with st.sidebar:
 agent = create_agent_executor()
 agent_mini = create_agent_executor("gpt-4.1-mini")
 
+
+# -------------------------
+# 질문이 없는 경우
+# -------------------------
+if not st.session_state["messages"]:
+
+    st.pills(
+        label="Examples",
+        label_visibility="collapsed",
+        options=SUGGESTIONS.keys(),
+        key="selected_suggestion"
+    )
+
 # ---------------------------------
 # 채팅 UI 출력
 # ---------------------------------
-st.title("여행을 쉽게, Trip Maker 🌴")
 
 for msg in st.session_state["messages"]:
     with st.chat_message(msg["role"]):  # 메시지의 역할(role:"user" 또는 "assistant")
@@ -118,7 +148,6 @@ if st.session_state.get("summaries"):
                 st.markdown(case['summary'])
                 select_btn = st.button("선택", key=f"case_{i}", width="stretch")
                 if select_btn:
-                    print("button click!")
                     st.session_state["selected_trip"] = {
                         "destination": st.session_state["summaries"]["destination"],
                         "cases":[case]
@@ -128,11 +157,15 @@ if st.session_state.get("summaries"):
 #--------------------------------------------------------------------------------
 # 버튼을 눌러 선택한 요약 일정 -> 세부 일정 호출 -> 화면에 보여주기
 #--------------------------------------------------------------------------------
+more_options = {
+    "travel_dense": None,
+    "travel_style": None,
+    "travel_transport": None
+}
 if st.session_state.get("selected_trip"):
-    print(st.session_state["selected_trip"])
 
     # 여행 옵션을 하나라도 선택한 경우
-    if st.session_state.get("travel_dense") or st.session_state.get("travel_style") or st.session_state("travel_transport"):
+    if st.session_state.get("travel_dense") or st.session_state.get("travel_style") or st.session_state.get("travel_transport"):
         more_options = {
             "travel_dense": st.session_state.get("travel_dense"),
             "travel_style": st.session_state.get("travel_style"),
@@ -140,7 +173,6 @@ if st.session_state.get("selected_trip"):
         }
     try:
         with st.spinner("✈️ 여행 일정 만드는 중..."):
-            print("in detail spinner")
             response = get_ai_trip_detail(
                 agent=agent,
                 trip_summary=st.session_state["selected_trip"], 
@@ -150,14 +182,47 @@ if st.session_state.get("selected_trip"):
             st.session_state["selected_trip"] = None
         with st.chat_message("assistant"):
             st.markdown(response["user_message"])
-            with st.spinner("지도 생성중 ..."):
-                map = make_map(response)
-                st_folium(
-                    map,
-                    height=MAP_HEIGHT,
-                    use_container_width=True,
-                    returned_objects=[]
-                )
+            try:
+                with st.spinner("지도 생성중 ..."):
+                    map, geo_locations = make_map(response)
+                    if map:
+                        # 우측 20%는 마커 안내
+                        col1, col2 = st.columns([4, 1])
+                    with col1:
+                        st_folium(
+                            map,
+                            height=MAP_HEIGHT,
+                            use_container_width=True,
+                            returned_objects=[]
+                        )
+                    with col2:
+                        items_html = ""
+                        for loc in geo_locations:
+                            items_html += f"""
+                            <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0;">
+                                <span style="font-size: 11px; color: #888;">DAY {loc["day"]}</span><br>
+                                <b>📍 {loc["name"]}</b><br>
+                                <span style="font-size: 12px;">{loc["description"]}</span>
+                            </div>
+                            """
+                        st.markdown(
+                            f"""
+                            <div style="
+                                height: {MAP_HEIGHT}px;
+                                overflow-y: auto;
+                                padding: 8px;
+                                border: 1px solid #e0e0e0;
+                                border-radius: 8px;
+                            ">
+                                {items_html}
+                            </div>
+                            """,
+                            unsafe_allow_html=True
+                        )
+                        
+            except Exception:
+                with st.chat_message("assistant"):
+                    st.markdown("⚠️ 지도 생성에 실패했습니다.")
         
         st.session_state["messages"].append({
             "role":"assistant",
@@ -172,8 +237,15 @@ if st.session_state.get("selected_trip"):
 # -----------------------------
 # 사용자 입력
 # -----------------------------
-if prompt := st.chat_input("메시지를 입력하세요"):
+_chat_input = st.chat_input("메시지를 입력하세요")
+_selected = st.session_state.get("selected_suggestion")
+prompt = SUGGESTIONS.get(_selected) if _selected else _chat_input
 
+if _selected:
+    del st.session_state["selected_suggestion"]
+
+
+if prompt:
     # 사용자 메시지 저장
     st.session_state["messages"].append({"role": "user", "content": prompt})
 
@@ -208,7 +280,8 @@ if prompt := st.chat_input("메시지를 입력하세요"):
                     response = get_ai_trip_detail(
                         agent=agent,
                         thread_id=st.session_state["thread_id"],
-                        prompt=prompt
+                        prompt=prompt,
+                        more_options=more_options
                     )
                 with st.chat_message("assistant"):
                     st.markdown(response["user_message"])

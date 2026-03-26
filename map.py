@@ -33,9 +33,9 @@ def extract_coordinates(data: dict) -> list:
     get_coordinates 함수를 통해 위, 경도로 변환된 리스트를 출력합니다.
     """
     results = []
-    print("----------------------------------------------")
-    print(data)
-    print("----------------------------------------------")
+    # print("----------------------------------------------")
+    # print(data)
+    # print("----------------------------------------------")
     for location in data["locations"]:
         coordinate = get_coordinates(location["address"])
         if coordinate is None:
@@ -49,20 +49,10 @@ def extract_coordinates(data: dict) -> list:
             "description": location['description'],
             "lat_lng": coordinate['lat_lng']
         })
-    print("*" * 20)
-    print(results)
-    print("*" * 20)
+    # print("*" * 20)
+    # print(results)
+    # print("*" * 20)
     return results
-
-# 지도의 중앙 찾기
-def get_center(coordinates: list) -> tuple:
-    """
-    세부 일정으로 만들어진 방문할 장소들의 평균을 구합니다.
-    평균 위경도는 지도의 중심이 됩니다.
-    """
-    lat, lng = zip(*coordinates)  # 반복 안하기
-    center = (sum(lat) / len(lat), sum(lng) / len(lng))
-    return center
 
 # 지도 반환
 def make_map(data: dict):
@@ -76,12 +66,13 @@ def make_map(data: dict):
         return None
 
     coords = [loc['lat_lng'] for loc in geo_locations]
-    center = get_center(coords)
-    
-    m = folium.Map(
-        location=center,
-        zoom_start=14
-    )
+    lats = [c[0] for c in coords]
+    lngs = [c[1] for c in coords]
+
+    m = folium.Map()
+    # 지도의 중앙을 찾는 대신 마커가 모두 포함되도록 최대치 기준으로 출력
+    m.fit_bounds([[min(lats), min(lngs)], [max(lats), max(lngs)]])
+
 
     folium.PolyLine(
         locations=coords,
@@ -120,4 +111,4 @@ def make_map(data: dict):
             )
         ).add_to(m)
 
-    return m
+    return m, geo_locations

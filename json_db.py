@@ -7,9 +7,11 @@ import json
 from pathlib import Path
 
 import uuid
+from datetime import datetime
 
 # JSON 파일의 경로
 DB_FILE = Path("chat_history.json")
+TRIP_DB = Path("trip.json")
 
 def _default_data() -> dict:
     """
@@ -89,3 +91,71 @@ def clear_thread_id() -> str:
     new_thread_id = str(uuid.uuid4())
     save_chat_data(new_thread_id, [])
     return new_thread_id
+
+def load_saved_trips() -> list:
+    """
+    saved_trips.json에서 저장된 여행 일정 전체를 불러옴.
+
+    동작:
+    1. 파일이 없으면 빈 리스트 반환
+    2. 파일이 있으면 리스트 전체 읽기
+    3. 형식이 잘못되었거나 오류가 나면 빈 리스트 반환
+    """
+    if not TRIP_DB.exists():
+        return []
+
+    try:
+        with TRIP_DB.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, list) else []
+    except Exception:
+        return []
+
+
+def save_trip(title: str, user_message: str, geo_locations: list):
+    """
+    여행 일정을 saved_trips.json에 추가 저장함.
+
+    저장 구조 (리스트 원소 하나):
+    {
+        "id": "uuid",
+        "saved_at": "2026-03-27T02:00:00",
+        "title": "도쿄 3박 4일",
+        "user_message": "## DAY 1 - ...",
+        "geo_locations": [
+            {
+                "day": 1,
+                "name": "도쿄역",
+                "address": "...",
+                "description": "...",
+                "lat": 35.6762,
+                "lng": 139.6503
+            }
+        ]
+    }
+    """
+    trips = load_saved_trips()
+
+    new_trip = {
+        "id": str(uuid.uuid4()),
+        "saved_at": datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+        "title": title,
+        "user_message": user_message,
+        "geo_locations": geo_locations,
+    }
+
+    trips.append(new_trip)
+
+    with TRIP_DB.open("w", encoding="utf-8") as f:
+        json.dump(trips, f, ensure_ascii=False, indent=2)
+
+
+def delete_trip(trip_id: str):
+    """
+    id가 일치하는 여행 일정을 saved_trips.json에서 삭제함.
+    """
+    trips = load_saved_trips()
+    trips = [t for t in trips if t.get("id") != trip_id]
+
+    with TRIP_DB.open("w", encoding="utf-8") as f:
+        json.dump(trips, f, ensure_ascii=False, indent=2)

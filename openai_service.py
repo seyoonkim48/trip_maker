@@ -8,7 +8,7 @@ from langgraph.checkpoint.sqlite import SqliteSaver
 import json
 
 # 사용자 정의 tool 함수들
-from tools import get_current_time, web_search, get_timezone_diff
+from tools import get_current_time, web_search, get_timezone_diff, get_exchange_rate, get_historical_weather
 
 CLASSIFIER_PROMPT = """
 당신은 사용자의 메시지를 분류하는 분류기입니다.
@@ -85,7 +85,10 @@ MAIN_PROMPT = """
 - 일정이 모두 끝난 후 ## 여행 준비 섹션 추가
 - 요청된 여행 기간 전체 일정을 반드시 작성하세요.
     웹 검색이 실패하더라도 일반 지식으로 전체 일정을 완성하세요.
-
+- 반드시 get_historical_weather로 여행지와 여행 월의 날씨를 조회한 후 안내하세요.
+    날씨 안내는 ## 여행 준비 섹션에 불렛포인트 없이 자연스러운 문장으로 작성하세요.
+    예시: 최근 3년간의 날씨 분석 결과, 7월 서울의 평균 기온은 25~30°C로 강수 확률이 높아 습하고 더운 날씨가 예상됩니다. 소나기와 뜨거운 햇볕을 대비해 양산과 우산을 챙기시기 바랍니다.
+- ## 여행 준비 섹션의 맨 마지막 줄에 "그럼 즐거운 여행 되세요!" 문구를 추가하세요.
 
 [여행지가 대한민국 외 국가인 경우 추가 안내]
 - 반드시 web_search로 현재 환율을 검색한 후 안내하세요.
@@ -96,6 +99,8 @@ MAIN_PROMPT = """
     예시: 런던은 한국보다 9시간 느립니다. (서머타임 적용 시 8시간)
     여행지 현지 표준시 기준이 아닌 반드시 한국과의 시차를 안내하세요.
 - 시차와 환율 안내는 ## 여행 준비 섹션에 포함하세요.
+    환율 정보는 get_exchange_rate를 사용하여 응답하세요.
+    기준은 원화가 되어야 합니다.
 
 [대한민국 내 여행인 경우]
 - 시차와 환율 안내를 절대 포함하지 마세요.
@@ -148,7 +153,7 @@ def create_agent_executor(model_type:str = DEFAULT_MODEL):
 
     agent = create_agent(
         model=llm,
-        tools=[get_current_time, web_search, get_timezone_diff],
+        tools=[get_current_time, web_search, get_timezone_diff, get_exchange_rate, get_historical_weather],
         system_prompt=MAIN_PROMPT if model_type == DEFAULT_MODEL else CLASSIFIER_PROMPT,
         checkpointer=checkpointer
     )
@@ -230,7 +235,7 @@ def get_ai_trip_summary(agent, prompt: str, thread_id: str) -> str:
     return json.loads(result["messages"][-1].content)
 
 # 세부 일정 + 일정 수정 요청
-def get_ai_trip_detail(agent, thread_id:str, trip_summary = None, prompt=None, more_options=None) -> str:
+def get_ai_trip_detail(agent, thread_id:str, more_options, trip_summary = None, prompt=None) -> str:
     """
     요약 일정 중 하나를 선택한 후 해당 내용을 전달해 세부적인 일정을 JSON으로 응답합니다.
     만들어진 1차 세부 일정에서 유저의 피드백(prompt)이 들어오면 일정을 수정합니다.
@@ -260,7 +265,14 @@ def get_ai_trip_detail(agent, thread_id:str, trip_summary = None, prompt=None, m
     - 가상의 장소나 불확실한 장소는 절대 포함하지 말 것
 5. DAY별 헤더 형식: ## DAY N - 컨셉 요약
 6. 요청된 전체 기간 일정을 모두 작성하세요.
-7. 대한민국 내 여행이면 시차/환율/화폐 정보를 절대 포함하지 마세요.
+7. 추가 옵션의 '1분 1초가 아깝다'는 시간표 형식으로 매 식사도 포함하여 자세하게 작성해주세요.
+8. 대한민국 내 여행이면 시차/환율/화폐 정보를 절대 포함하지 마세요.
+    대한민국이 아닌 다른 나라의 경우 환율 정보는 get_exchange_rate를 사용하여 응답하세요.
+    기준은 원화가 되어야 합니다.
+9. 반드시 get_historical_weather로 여행지와 여행 월의 날씨를 조회한 후 안내하세요.
+    날씨 안내는 ## 여행 준비 섹션에 불렛포인트 없이 자연스러운 문장으로 작성하세요.
+    예시: 최근 3년간의 날씨 분석 결과, 7월 서울의 평균 기온은 25~30°C로 강수 확률이 높아 습하고 더운 날씨가 예상됩니다. 소나기와 뜨거운 햇볕을 대비해 양산과 우산을 챙기시기 바랍니다.
+10. ## 여행 준비 섹션의 맨 마지막 줄에 "그럼 즐거운 여행 되세요!" 문구를 추가하세요.
 
 반드시 아래 JSON 형식으로만 응답하세요.
 {{
@@ -311,11 +323,11 @@ def get_ai_trip_detail(agent, thread_id:str, trip_summary = None, prompt=None, m
             }
         }
     )
-    raw = result["messages"][-1].content
-    parsed = json.loads(raw)
-    print("=== 세부 일정 LLM 원본 응답 ===")
-    print(parsed)
-    print("================================")
+    # raw = result["messages"][-1].content
+    # parsed = json.loads(raw)
+    # print("=== 세부 일정 LLM 원본 응답 ===")
+    # print(parsed)
+    # print("================================")
     # 전체 메시지 흐름 확인
     # for msg in result["messages"]:
     #     print(type(msg).__name__, ":", msg.content[:100] if msg.content else "(tool call)")
