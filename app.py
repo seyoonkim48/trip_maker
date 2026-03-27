@@ -58,9 +58,9 @@ with st.sidebar:
         side_option,
         selection_mode="single",
         width="stretch",
+        label_visibility="collapsed",
         default="여행 옵션"
     )
-    
     if selection == "저장된 일정":
         st.markdown("**🚧 개발 중입니다.**")
     else:
