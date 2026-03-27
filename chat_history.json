@@ -1,4 +1,9 @@
 {
-  "thread_id": "1c69e42d-784e-40ca-849c-70c0a9fff463",
-  "messages": []
+  "thread_id": "9c9b72f7-7d23-41c8-a5d6-ae9adef5408f",
+  "messages": [
+    {
+      "role": "user",
+      "content": "서울 1박 2일 여행 일정을 짜주세요."
+    }
+  ]
 }

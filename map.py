@@ -6,7 +6,7 @@ from geopy.geocoders import Nominatim
 import folium
 
 # OSM 연결을 위한 user_agent 설정 - 없으면 요청 차단
-geolocator = Nominatim(user_agent="trip", timeout=10)
+geolocator = Nominatim(user_agent="trip_maker", timeout=10)
 
 # 주소 -> 위도, 경도 출력 
 def get_coordinates(place: str):
@@ -110,5 +110,4 @@ def make_map(data: dict):
                 icon_anchor=(14, 14),
             )
         ).add_to(m)
-
     return m, geo_locations

@@ -7,9 +7,9 @@ import pytz     # pip install pytz
 import yfinance as yf   # pip install yfinance
 from geopy.geocoders import Nominatim
 
-# import os
-# os.environ["SSL_CERT_FILE"] = r"C:\cert\cacert.pem"
-# os.environ["CURL_CA_BUNDLE"] = r"C:\cert\cacert.pem"
+import os
+os.environ["SSL_CERT_FILE"] = r"C:\cert\cacert.pem"
+os.environ["CURL_CA_BUNDLE"] = r"C:\cert\cacert.pem"
 
 
 # pytz를 사용해 문자열 형식으로 받은 타임존을 파이썬 타임존 인스턴스로 만들고,
