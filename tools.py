@@ -107,7 +107,7 @@ def get_historical_weather(destination:str, month: int=None) -> str:
     url = "https://archive-api.open-meteo.com/v1/archive"
 
     current_year = datetime.now().year
-    month = month if month else datetime.now().month[1]
+    month = month if month else datetime.now().month
     all_max_temps = []  # 최고 기온
     all_min_temps = []  # 최저 기온
     all_precip = []     # 강수량

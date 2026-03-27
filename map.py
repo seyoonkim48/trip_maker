@@ -2,11 +2,16 @@
 # 지도와 관련된 연산을 하는 파일
 
 # Open Street Map
-from geopy.geocoders import Nominatim
+# from geopy.geocoders import Nominatim
+from geopy.geocoders import GoogleV3
 import folium
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 # OSM 연결을 위한 user_agent 설정 - 없으면 요청 차단
-geolocator = Nominatim(user_agent="trip", timeout=10)
+# geolocator = Nominatim(user_agent="trip", timeout=10)
+geolocator = GoogleV3(os.getenv("GOOGLE_MAPS_API_KEY"))
 
 # 주소 -> 위도, 경도 출력 
 def get_coordinates(place: str):

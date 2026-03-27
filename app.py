@@ -290,12 +290,40 @@ if prompt:
                     st.markdown(response["user_message"])
 
                     with st.spinner("지도 생성중 ..."):
-                        map = make_map(response)
+                        map, geo_locations = make_map(response)
+                    if map:
+                        # 우측 20%는 마커 안내
+                        col1, col2 = st.columns([4, 1])
+                    with col1:
                         st_folium(
                             map,
                             height=MAP_HEIGHT,
                             use_container_width=True,
                             returned_objects=[]
+                        )
+                    with col2:
+                        items_html = ""
+                        for loc in geo_locations:
+                            items_html += f"""
+                            <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid #f0f0f0;">
+                                <span style="font-size: 11px; color: #888;">DAY {loc["day"]}</span><br>
+                                <b>📍 {loc["name"]}</b><br>
+                                <span style="font-size: 12px;">{loc["description"]}</span>
+                            </div>
+                            """
+                        st.markdown(
+                            f"""
+                            <div style="
+                                height: {MAP_HEIGHT}px;
+                                overflow-y: auto;
+                                padding: 8px;
+                                border: 1px solid #e0e0e0;
+                                border-radius: 8px;
+                            ">
+                                {items_html}
+                            </div>
+                            """,
+                            unsafe_allow_html=True
                         )
                 
                 st.session_state["messages"].append({
