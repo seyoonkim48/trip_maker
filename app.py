@@ -62,7 +62,7 @@ with st.sidebar:
     )
     
     if selection == "저장된 일정":
-        pass
+        st.markdown("**🚧 개발 중입니다.**")
     else:
         st.markdown("### ✈️ 여행 옵션")
         st.write("트립 메이커가 참고할 수 있게 여행에 대한 세부 설정을 선택해주세요.")
