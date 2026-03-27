@@ -53,61 +53,64 @@ with st.sidebar:
         side_option,
         selection_mode="single",
         width="stretch",
+        label_visibility="collapsed",
         default="여행 옵션"
     )
-    
-    st.markdown("### ✈️ 여행 옵션")
-    st.write("트립 메이커가 참고할 수 있게 여행에 대한 세부 설정을 선택해주세요.")
-    
-    if st.button("옵션 초기화"):
-        st.session_state["travel_dense"] = None
-        st.session_state["travel_style"] = []
-        st.session_state["travel_transport"] = None
-        st.rerun()
+    if selection == "저장된 일정":
+        st.markdown("**🚧 개발 중입니다.**")
+    else:
+        st.markdown("### ✈️ 여행 옵션")
+        st.write("트립 메이커가 참고할 수 있게 여행에 대한 세부 설정을 선택해주세요.")
+        
+        if st.button("옵션 초기화"):
+            st.session_state["travel_dense"] = None
+            st.session_state["travel_style"] = []
+            st.session_state["travel_transport"] = None
+            st.rerun()
 
-    # 여행 밀도
-    st.markdown("**여행 밀도**")
-    st.radio(
-        "여행 밀도",
-        ['⏰ 1분 1초가 아깝다', '🎲 발길 닿는 대로', '🌿 적당히 여유롭게'],
-        captions=[
-            "시간표 형식, 아침/점심/저녁 식당까지",
-            "자유시간이 섞인 시간표",
-            "지명 정도만, 즉흥적으로"
-        ],
-        index=None,
-        label_visibility="collapsed",
-        key="travel_dense",
+        # 여행 밀도
+        st.markdown("**여행 밀도**")
+        st.radio(
+            "여행 밀도",
+            ['⏰ 1분 1초가 아깝다', '🎲 발길 닿는 대로', '🌿 적당히 여유롭게'],
+            captions=[
+                "시간표 형식, 아침/점심/저녁 식당까지",
+                "자유시간이 섞인 시간표",
+                "지명 정도만, 즉흥적으로"
+            ],
+            index=None,
+            label_visibility="collapsed",
+            key="travel_dense",
+            )
+        # 여행 스타일
+        st.markdown("**여행 스타일**")
+        st.multiselect(
+            "여행 스타일",
+            [
+                '🏛️ 유적지·역사', '🏙️ 건물·도시 풍경',
+                '🛍️ 시장·쇼핑', '🍜 현지 음식 탐방',
+                '👥 현지인 문화', '🏖️ 휴양·자연'
+            ],
+            label_visibility="collapsed",
+            key="travel_style"
+            )
+        
+        # 이동 수단
+        st.markdown("**이동 수단**")
+        st.radio(
+            "이동 수단",
+            ['🚶 도보 중심', '🚇 대중교통', '🚕 택시', '🔀 유연하게'],
+            index=None,
+            label_visibility="collapsed",
+            key="travel_transport"
         )
-    # 여행 스타일
-    st.markdown("**여행 스타일**")
-    st.multiselect(
-        "여행 스타일",
-        [
-            '🏛️ 유적지·역사', '🏙️ 건물·도시 풍경',
-            '🛍️ 시장·쇼핑', '🍜 현지 음식 탐방',
-            '👥 현지인 문화', '🏖️ 휴양·자연'
-        ],
-        label_visibility="collapsed",
-        key="travel_style"
-        )
-    
-    # 이동 수단
-    st.markdown("**이동 수단**")
-    st.radio(
-        "이동 수단",
-        ['🚶 도보 중심', '🚇 대중교통', '🚕 택시', '🔀 유연하게'],
-        index=None,
-        label_visibility="collapsed",
-        key="travel_transport"
-    )
 
-    st.divider()
+        st.divider()
 
-    if st.button("대화 초기화"):
-        st.session_state["thread_id"] = clear_thread_id()
-        st.session_state["messages"] = []
-        st.rerun()
+        if st.button("대화 초기화"):
+            st.session_state["thread_id"] = clear_thread_id()
+            st.session_state["messages"] = []
+            st.rerun()
 
 # -----------------------------------------
 # Agent 설정
